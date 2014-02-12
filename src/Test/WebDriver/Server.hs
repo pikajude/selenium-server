@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module Test.WebDriver.Server (
     -- *** Running the server
@@ -10,13 +9,12 @@ module Test.WebDriver.Server (
     ServerSettings(..)
 ) where
 
-import Control.Concurrent
 import Control.Exception
-import Control.Monad
 import Network
 import System.IO
 import System.Process
 import qualified Test.WebDriver.Server.Download as Download
+import Test.WebDriver.Server.Poll
 
 -- | Where the server can be found. 'Remote' means @selenium-server@ won't be
 -- started.
@@ -59,11 +57,3 @@ withServer ss act = case serverLocation ss of
                     return ch)
                 (\h -> terminateProcess h >> hClose blackHole)
                 (const act)
-
-waitForServer :: IO ()
-waitForServer = void $ go 0 where
-    go x | x >= (30 :: Int) = error "Timed out after 30 seconds waiting for selenium server."
-    go n = do
-        threadDelay 1000000
-        connectTo "127.0.0.1" (PortNumber 4444)
-            `catch` (\(_ :: IOException) -> go (n + 1))
